@@ -1,10 +1,10 @@
-use </home/shisius/Projects/UniversalTools/CADLIB/base.scad>;
-use </home/shisius/Projects/UniversalTools/CADLIB/mechanic.scad>;
-use </home/shisius/Projects/UniversalTools/CADLIB/gears.scad>;
-use </home/shisius/Projects/UniversalTools/CADLIB/motor_mount.scad>;
-use </home/shisius/Projects/UniversalTools/CADLIB/profile.scad>;
-use </home/shisius/Projects/UniversalTools/CADLIB/gt2.scad>;
-use </home/shisius/Build/Bolts/nuts_and_bolts_v1.95.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/base.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/mechanic.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/gears.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/motor_mount.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/profile.scad>;
+use </home/cat/Projects/UniversalTools/CADLIB/gt2.scad>;
+use </home/cat/Build/Bolts/nuts_and_bolts_v1.95.scad>;
 
 belt_w = 10.0;
 belt_th = 1.3;
@@ -424,6 +424,73 @@ module brush_holder()
     }
 }
 
+module hbar_carriage_main_simple()
+{
+    bridge_support_h = 15;
+    bridge_support_w = 12;
+    car_support_hldr_l = 10;
+    car_outer_d = car_outer_d + 2;
+    bar_h = 16.5;
+    unit_h = 50;
+    car_main_l = 20;
+    difference() {
+        union() {
+            cylinder(d = car_outer_d, h = car_main_l, center = true);
+            // bridge mount
+            translate([car_bridge_hldr_l/2 + car_outer_d/4, 
+                       car_bridge_hldr_h/2 - car_outer_d/2, 0])
+            cube([car_bridge_hldr_l + car_outer_d/2, car_bridge_hldr_h, 
+                  car_main_l], center = true);
+            // belt
+            translate([0, car_outer_d/4 + car_belt_border_h, 0])
+            cube([car_belt_border_w*2 + belt_w, car_outer_d/2, car_main_l], 
+                center = true);
+            // lugs for fastening
+            //translate([-car_outer_d/4 - car_back_wall/2, 0, 0])
+            //cube([car_outer_d/2 + car_back_wall, car_outer_d, car_main_l],
+            //    center = true);
+        }
+        union() {
+            cylinder(d = bar_d + car_bar_blsh*2, h = car_main_l + 0.1, 
+                     center = true);
+            cylinder(d = car_slider_d, h = car_main_l - car_border_th*2,
+                     center = true);
+            // bridge
+            translate([car_bridge_hldr_l/2 + car_outer_d/2, 
+                bridge_h/2 - car_outer_d/2 - 0.01, 0]) 
+            rotate([90,0,0])
+            square_channel(h = bridge_support_h, w = bridge_support_w, 
+                btm_th = bridge_btm_th, side_th = bridge_side_th, 
+                l = car_bridge_hldr_l + 0.01);
+            // bridge mount
+            translate([car_bridge_hldr_l/4 + car_outer_d/2, 
+                bridge_h/2 - car_outer_d/2 - 0.01, 0])
+            bolt_nut_mount(l = car_main_l + 0.01, d = bridge_mount_d);
+            translate([3*car_bridge_hldr_l/4 + car_outer_d/2, 
+                bridge_h/2 - car_outer_d/2 - 0.01, 0])
+            bolt_nut_mount(l = car_main_l + 0.01, d = bridge_mount_d);
+            // belt
+            translate([0, -bar_h + unit_h/2 + gear_d/2, 0.5])
+            rotate([-90, 90, 0])
+            gt2lock_pattern(n_pin = car_main_l/2 + 2, width = belt_w, 
+                support = car_belt_border_h);
+            // window frame
+            w_frame_th = car_outer_d;
+            translate([0, -w_frame_th/2 - bar_h + car_window_gap_min, 0])
+            cube([car_outer_d + 2 * car_bridge_hldr_l + 0.01, w_frame_th, 
+                car_main_l + 0.01], center = true);
+            // belt mount
+            belt_mount_offset = 2;
+            mirrorcp([0, 0, 1]) mirrorcp([1, 0, 0])
+            translate([belt_w/2 + car_belt_border_w/2, 
+                car_outer_d/2 - belt_mount_offset, car_main_l/4])
+            rotate([90, 0, 180])
+            bolt_nut_mount(l = car_belt_border_w + belt_mount_offset*2 + 0.01, 
+                d = car_belt_mount_d, hat_d = 0.01, depth = 8);
+        }
+    }
+}
+
 $fn = 100;
 //hbar_motor_unit();
 //hbar_terminal_unit_gear();
@@ -437,3 +504,4 @@ hbar_full(200, 100, 100);
 //hbar_terminal_unit_holder();
 //hbar_mount_plate_term();
 //brush_holder();
+//hbar_carriage_main_simple();
