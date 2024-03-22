@@ -116,14 +116,14 @@ def bot_prof_2():
 def bot_side_drill():
     code = g_drill_quadro(19, 21, 31, 16, sz, upz, 6.0, dofast=True)
     code += g00_z(upz)
-    code += g02_rxys(11-td3/2, 19, 21, 29, sxy, sz, 1.5)
+    code += g02_rxys(11-td3/2, 19, 21, 15.5, sxy, sz, 2.0)
     code += g00_z(upz)
     return code
 
 def bot_side_drill_rotX():
     code = g_drill_quadro(19, 19, 31, 16, sz, upz, 6.0, dofast=True)
     code += g00_z(upz)
-    code += g02_rxys(11-td3/2, 19, 19, 2.0, sxy, sz, 2.0)
+    code += g02_rxys(11-td3/2, 19, 19, 15.5, sxy, sz, 2.0)
     code += g00_z(upz)
     return code
 
@@ -379,10 +379,56 @@ def x_stopplate():
     code += g00_z(upz)
     return code
 
+def y_stopplate_main():
+    code = g00_z(upz)
+    points_d = [[10, 31], [20, 31+29], [10, 31+29+29]]
+    for p in points_d:
+        code += g02_rxys(10/2-6/2, p[0], p[1], 6.5, 200, 20, 1.0)
+        code += g_drill_n(p[0], p[1], 20, 20, 4)
+        code += g00_z(upz)
+    code += g_cut([[0, 120+6/2], [32, 120+6/2]], 21, 300, 20, 1.0, upz)
+    code += g00_z(upz)
+    return code
+
+def y_stopplate_first():
+    code = g00_z(upz)
+    l = 121
+    code += g_cut([[0, l+6/2], [32, l+6/2]], 21, 300, 20, 1.0, upz)
+    code += g00_z(upz)
+    return code
+
+def y_stopplate_fin():
+    code = g00_z(upz)
+    sup_d = 7.97
+    #code += g02_rxys(sup_d/2-6/2, 31+29/2, -15, 26, 300, 30, 1.0)
+    code += g00_z(upz)
+    code += g02_rxys(sup_d/2-6/2, 31+29+29/2, -15, 26, 300, 30, 1.0)
+    code += g00_z(upz)
+    return code
+
+def try_do():
+    code = g00_z(upz)
+    code += g02_rxys(7.97/2-6/2, 10, 20, 5, 300, 30, 1.0)
+    code += g00_z(upz)
+    return code
+
+def templ():
+    fd = 3.175
+    code = g00_z(upz)
+    code += g_drill_points([[138/4, 7], [138/4, 12], [0.75*138, 12], [0.75*138, 7]], 2, 30, upz, 2)
+    code += g00_z(upz)
+    code += g_cut([[138+fd/2, 0], [138+fd/2, 20]], 2, 300, 30, 0.5, upz)
+    code += g00_z(upz)
+    return code
+
 def lazer_hldr():
     shd = 69.5
     lw = 33
     pw5 = 4.9
+    code = g00_z(upz)
+    return code
+
+def trip_step():
     code = g00_z(upz)
     return code
     
@@ -400,7 +446,7 @@ if __name__ == "__main__":
     #code += top_prof_3(30)
     #code += top_nut_3(12);
     #code += top_2ghdr_fin()
-    code += x_stopplate()
+    code += y_stopplate_fin()
 
     #code += g02_rxys(2.5-td3/2, 21, 21, 7, sxy, sz, 1.0)
     
@@ -426,7 +472,7 @@ if __name__ == "__main__":
 
     code += g00_xy(0,0)
 
-    f = open('xstopplate.gcode', 'wb')
+    f = open('ystop_fin.gcode', 'wb')
     f.write(bytes(code, encoding='UTF-8'))
     f.close()
     
