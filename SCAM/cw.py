@@ -25,8 +25,10 @@ bias_deep = bias_top
 prof_car = [[5, 30], [5, 30-6.9], [9, 30-6.9], [9, 10+6.9], [5, 10+6.9], [5,10],
             [25, 10], [25, 10+6.9], [21, 10+6.9], [21,30-6.9], [25,30-6.9],[25,30],[5,30]]
 
-prof_car_abs = [[-10,11], [-10,10-6.9],[-6,10-6.9],[-6,-10+6.9],[-10,-10+6.9],[-10,-10],
-                [10,-10],[10,-10+6.9],[6,-10+6.9],[6,10-6.9],[10,10-6.9],[10,11],[-10,11]]
+car_slot = 6.2
+chmcs = (20-car_slot)/2
+prof_car_abs = [[-10,10], [-10,10-chmcs],[-6,10-chmcs],[-6,-10+chmcs],[-10,-10+chmcs],[-10,-10],
+                [10,-10],[10,-10+chmcs],[6,-10+chmcs],[6,10-chmcs],[10,10-chmcs],[10,10],[-10,10]]
 
 bias_car = [[1,-1], [1,1], [1,1], [1, -1], [1, -1], [1,1],
             [-1, 1], [-1, -1], [-1, -1], [-1, 1], [-1, 1], [-1, -1], [1, -1]]
@@ -34,6 +36,18 @@ bias_car = [[1,-1], [1,1], [1,1], [1, -1], [1, -1], [1,1],
 top_depth = 5
 deep_depth = 20
 deep_top_depth = 30
+
+snell_depth = 6
+snell_mount_y = 5
+
+car_side_w = 4
+car_side_h = 6.2
+car_plate_l = 40-6.5*2
+car_plate_h = 3
+car_center_x = 14
+prof_car_custom = [[]]
+bias_car_custom = [[]]
+
 
 def x2y(points):
     for p in points:
@@ -182,72 +196,139 @@ def top_2ghdr_fin():
 # CAR
 def go_car_prof_2(car_depth):
     code = g00_z(upz)
-    points = prof2points(prof_car_abs, bias_car, td2/2 - 0.2)
-    move_2d(points, 20, 19.5)
-    x2y(points)
-    code += g00_xy(points[0][0], points[0][1])
-    code += g00_z(0)
-    for iz in range(car_depth):
-        code += g01_z(-(iz+1), sz)
-        code += g01_list(points, sxy)
+    points = prof2points(prof_car_abs, bias_car, td2/2 - 0.15)
+    move_2d(points, 20, 14)
+    #x2y(points)
+    code += g_poly(points, car_depth, sxy, sz, upz, 1.5)
+    code += g00_z(upz)
+    code += g_hex(snell_depth/2, snell_mount_y, 5.5 - td2, 2.5, sxy, sz, upz, 1.0)
+    code += g02_rxys(3/2-td2/2, snell_depth/2, snell_mount_y, car_depth, sxy, sz, 2.0, start_depth = 2.5)
+    code += g00_z(upz)
+    code += g_hex(40-snell_depth/2, snell_mount_y, 5.5 - td2, 2.5, sxy, sz, upz, 1.0)
+    code += g02_rxys(3/2-td2/2, 40-snell_depth/2, snell_mount_y, car_depth, sxy, sz, 2.0, start_depth = 2.5)
     code += g00_z(upz)
     return code
 
-def go_car_prof_3(car_depth):
-    code = g00_z(upz)
-    points = prof2points(prof_car_abs, bias_car, td3/2)
-    move_2d(points, 20, 19.5)
-    x2y(points)
-    code += g00_xy(points[0][0], points[0][1])
-    code += g00_z(0)
-    for iz in range(car_depth):
-        code += g01_z(-(iz+1), sz)
-        code += g01_list(points, sxy)
-    code += g00_z(upz)
-    return code
-
-def go_car_snell_2(cx = 19/2, cy = 30):
+def go_car_snell_2():
     prof_w = 7.2
     prof_h = 10.45
+    unit_30 = 30
     code = g00_z(upz)
-    points = [[-prof_w/2+1, 1], [prof_w/2-1, 1], [prof_w/2-1,-prof_h+1],[-prof_w/2+1,-prof_h+1],[-prof_w/2+1,1]]
-    move_2d(points, cx, cy)
-    code += g00_xy(points[0][0], points[0][1])
-    code += g00_z(0)
-    for iz in range(7):
-        code += g01_z(-(iz+1), sz)
-        code += g01_list(points, sxy)
+    points1 = [[-prof_w/2+td2/2, 0], [-prof_w/2+td2/2,unit_30]]
+    move_2d(points1, 19/2, 0)
+    code += g_cut(points1, snell_depth, sxy, sz, 1.5, upz)
     code += g00_z(upz)
-
+    points2 = [[prof_w/2-td2/2, 0], [prof_w/2-td2/2,unit_30]]
+    move_2d(points2, 19/2, 0)
+    code += g_cut(points2, snell_depth, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
+    move_2d(points1, 19+2, 0)
+    code += g_cut(points1, snell_depth, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
+    move_2d(points2, 19+2, 0)
+    code += g_cut(points2, snell_depth, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
+    code += g_rect(19/2, unit_30/2+prof_h-td2, 3.8-td2, unit_30-td2, snell_depth, sxy, sz, upz, 1.5)
+    code += g00_z(upz)
+    code += g_rect(19/2+19+2, unit_30/2+prof_h, 3.8-td2, unit_30-td2, snell_depth, sxy, sz, upz, 1.5)
+    code += g00_z(upz)
+    code += g_cut([[20,0], [20,unit_30]], 17, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
     return code
 
-def go_car_snell_2_full(cx = 19/2, cy = 30):
-    code = go_car_snell_2()
-    code += go_car_snell_2(cx = 40-19/2)
+def go_car_bot():
+    code = g00_z(upz)
+    mount_px = 23.5
+    mount_py = 14
+    points = [[-mount_px/2, -mount_py/2], [-mount_px/2, mount_py/2], [mount_px/2, mount_py/2], [mount_px/2, -mount_py/2]]
+    move_2d(points, 20, 19/2)
+    code += g_drill_points(points, 16, sz, upz, 6.0, dofast=True)
+    move_2d(points, 0, 19+2)
+    code += g_drill_points(points, 16, sz, upz, 6.0, dofast=True)
     code += g00_z(upz)
-    code += g_cut([[20,0],[20,30]], 10, sxy, sz, 1, upz)
+    code += g_rect_f(20, 20, 40-2*snell_depth-1-td3, 40, 3.0, sxy, sz, upz, 1.5, td3*0.75)
+    code += g_rect(20, 20, 6-td3, 40, 3.0, sxy, sz, upz, 1.5, start_depth = 3.0)
     code += g00_z(upz)
     return code
 
-def car_hex():
-
-    points = [[3, 5], [3, 15], [27.5, 5], [27.5, 15]]
-
+def go_car_top():
     code = g00_z(upz)
-
+    mount_px = 23.5
+    mount_py = 14
+    points = [[-mount_px/2, -mount_py/2], [-mount_px/2, mount_py/2], [mount_px/2, mount_py/2], [mount_px/2, -mount_py/2]]
+    move_2d(points, 20, 19/2)
+    code += g_drill_points(points, 16, sz, upz, 6.0, dofast=True)
+    code += g00_z(upz)
     for p in points:
-        code += g_hex(p[0], p[1], 5.5 - 2, 2.5, sxy, sz, upz, 1.0)
+        code += g02_rxys(5/2-td3/2, p[0], p[1], 2.5, sxy, sz, 1.5)
         code += g00_z(upz)
+    move_2d(points, 0, 19+2)
+    code += g_drill_points(points, 16, sz, upz, 6.0, dofast=True)
+    code += g00_z(upz)
+    for p in points:
+        code += g02_rxys(5/2-td3/2, p[0], p[1], 2.5, sxy, sz, 1.5)
+        code += g00_z(upz)
+    code += g00_z(upz)
     return code
 
-def car_drill(depth):
-
-    points = [[3, 5], [3, 15], [27.5, 5], [27.5, 15]]
-
+def g_fin_top_cut():
     code = g00_z(upz)
+    code += g_cut([[20,0], [20,40]], 4, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
+    return code
 
-    code += g_drill_points(points, depth, sz, upz, 1.0, dofast=True)
+def car_belt_sup_bot():
+    code = g00_z(upz)
+    toty = 40-2*snell_depth-1
+    cut_y = (toty-6)/2-td3
+    code += g_rect_f(20, (toty-6)/4, 40, cut_y, 7.0, sxy, sz, upz, 1.5, td3*0.75)
+    code += g00_z(upz)
+    code += g_rect_f(20, 6 + 3*(toty-6)/4, 40, cut_y, 7.0, sxy, sz, upz, 1.5, td3*0.75)
+    code += g00_z(upz)
+    code += g_cut([[19/2,toty/2-6/2], [19/2,toty/2+6/2]], 10.0, sxy, sz, 2.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[19/2 + 19 + 2,toty/2-6/2], [19/2 + 19 + 2,toty/2+6/2]], 10.0, sxy, sz, 2.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[20,toty/2-6/2], [20,toty/2+6/2]], 7.0, sxy, sz, 2.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[0,toty+td3/2], [40,toty+td3/2]], 10.0, sxy, sz, 2.0, upz)
+    code += g00_z(upz)
+    mount_py = 23.5
+    mount_px = 14
+    points = [[-mount_px/2, -mount_py/2], [-mount_px/2, mount_py/2], [mount_px/2, mount_py/2], [mount_px/2, -mount_py/2]]
+    move_2d(points, 19/2, toty/2)
+    code += g_drill_points(points, 10, sz, upz, 10.0, dofast=True)
+    move_2d(points, 19/2+19+2, 0)
+    code += g_drill_points(points, 10, sz, upz, 10.0, dofast=True)
+    code += g00_z(upz)
+    return code
 
+def car_belt_round():
+    code = g00_z(upz)
+    code += g_cut([[19/2 - td3/2,toty/2-6/2], [19/2 - td3/2,toty/2+6/2]], 3.0, sxy, sz, 3.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[19/2 + td3/2,toty/2+6/2], [19/2 + td3/2,toty/2-6/2]], 3.0, sxy, sz, 3.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[19/2 - td3/2+ 19 + 2,toty/2-6/2], [19/2 - td3/2+ 19 + 2,toty/2+6/2]], 3.0, sxy, sz, 3.0, upz)
+    code += g00_z(upz)
+    code += g_cut([[19/2 + td3/2+ 19 + 2,toty/2+6/2], [19/2 + td3/2+ 19 + 2,toty/2-6/2]], 3.0, sxy, sz, 3.0, upz)
+    code += g00_z(upz)
+    return code
+
+def car_belt_sup_cut():
+    code = g00_z(upz)
+    cubeh = 33
+    code += g_cut([[cubeh-10-td2/2, td2/2+0.5], [cubeh-10-td2/2, 40-td2/2-0.5]], 16, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
+    return code
+
+def car_belt_sup_top():
+    toty = 40-2*snell_depth-1
+    code = g00_z(upz)
+    code += g_rect_f(20, toty/2, 40, 6-td2, 0.5, sxy, sz, upz, 0.5, td2*0.75)
+    code += g00_z(upz)
+    code += g_cut([[20, td2/2+0.5], [20, 30-td2/2-0.5]], 3, sxy, sz, 1.5, upz)
+    code += g00_z(upz)
     return code
 
 def car_belt(cx,cy):
